@@ -12,26 +12,23 @@
                 const data = await res.json();
                 const alertBox = document.getElementById('alert-box');
                 
-                // Update alert box with appropriate styling
-                if (data.message.includes("No Person Detected")) {
+                if (data.message.includes("NO PERSON DETECTED")) {
                     alertBox.className = "alert absence";
-                } else if (data.message.includes("Intruder Detected")) {
+                } else if (data.message.includes("INTRUDER DETECTED")) {
                     alertBox.className = "alert intruder";
                 } else if (data.message) {
                     alertBox.className = "alert warning";
                 } else {
                     alertBox.className = "alert";
                 }
-                
-                alertBox.innerText = data.message || '';
+
+                alertBox.innerText = data.message || 'Status: Normal';
             } catch (e) {
                 console.error('Fetch alert failed:', e);
                 document.getElementById('alert-box').innerText = 'Error fetching alerts';
             }
         }
-        // poll every second
         setInterval(fetchAlert, 1000);
-        // initial fetch
         window.onload = fetchAlert;
     </script>
 </head>
