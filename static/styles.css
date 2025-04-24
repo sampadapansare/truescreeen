@@ -1,37 +1,65 @@
+/* Global Styles */
 body {
-text-align: center;
-font-family: Arial, sans-serif;
-background-color: #f4f4f4;
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f9;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.container {
+    text-align: center;
+    width: 80%;
+    max-width: 900px;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 h1 {
-color: #333;
+    color: #333;
+    font-size: 2em;
 }
 
-.container {
-display: flex;
-justify-content: center;
-align-items: center;
-margin-top: 20px;
+/* Video Feed Section */
+.video-container {
+    margin-top: 30px;
+    padding: 20px;
+    border: 2px solid #ccc;
+    border-radius: 10px;
 }
 
-#webcam {
-border: 5px solid #333;
-border-radius: 10px;
+video, #live-feed {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    background-color: black;
 }
 
-
-/* static/styles.css */
-.alert {
-font-size: 1.2em;
-font-weight: bold;
-color: red;
-margin: 20px;
-text-align: center;
+/* Alert Section */
+.alert-container {
+    margin-top: 40px;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    border: 1px solid #ddd;
 }
 
-.container {
-display: flex;
-justify-content: center;
-margin-top: 20px;
+#alert-message {
+    font-size: 1.2em;
+    color: #ff5722; /* Default color for alerts */
+    font-weight: bold;
+}
+
+/* Optional: For better visibility, color-coded alerts */
+#alert-message.positive {
+    color: #4CAF50; /* Green for positive messages */
+}
+
+#alert-message.negative {
+    color: #f44336; /* Red for error/warning messages */
 }
