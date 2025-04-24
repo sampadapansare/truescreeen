@@ -3,37 +3,30 @@ import cv2
 import requests
 import threading
 import time
-from datetime import datetime  # Added for timestamp
+from datetime import datetime
 
 app = Flask(__name__)
 
-# ─── CONFIG ───────────────────────────────────────────────────────────────────
+# CONFIG
 ROBOFLOW_API_KEY = "ATCth3RHKPljJdY3UmHL"
 ROBOFLOW_MODEL_ID = "interview-dxisb/3"
-
-# Thresholds (# of consecutive frames)
 ABSENCE_THRESHOLD = 10
 INTRUDER_THRESHOLD = 10
 ATTENTION_THRESHOLD = 15
 
-# ─── GLOBALS ──────────────────────────────────────────────────────────────────
+# GLOBALS
 alert_message = ""
 _last_alert_message = ""
 lock = threading.Lock()
 detection_result = {}
 frame_for_detection = None
-system_status = "Initializing..."  # Added system status
+system_status = "Initializing..."
 
-# ─── DETECTORS ────────────────────────────────────────────────────────────────
-# Fixed typo in haarcascades
-face_cascade = cv2.CascadeClassifier(
-    cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
-)
-eye_cascade = cv2.CascadeClassifier(
-    cv2.data.haarcascades + 'haarcascade_eye.xml'
-)
+# LOAD HAAR CASCADES
+face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+eye_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_eye.xml')
 
-# ─── BACKGROUND ROBOFLOW THREAD ───────────────────────────────────────────────
+# ROBOFLOW DETECTION THREAD
 def roboflow_loop():
     global detection_result, frame_for_detection
     while True:
@@ -58,7 +51,7 @@ def roboflow_loop():
 
 threading.Thread(target=roboflow_loop, daemon=True).start()
 
-# ─── VIDEO & FRAUD DETECTION ──────────────────────────────────────────────────
+# VIDEO STREAMING AND DETECTION
 def generate_frames():
     global alert_message, _last_alert_message, frame_for_detection, system_status
 
@@ -67,7 +60,7 @@ def generate_frames():
         system_status = "Camera Error"
         print("Error: Could not open camera")
         return
-    
+
     cap.set(3, 640)
     cap.set(4, 480)
 
@@ -81,26 +74,17 @@ def generate_frames():
             system_status = "Frame Read Error"
             break
 
-        # Get current timestamp
         now = datetime.now()
         timestamp = now.strftime("%H:%M | %d-%m-%Y")
 
-        # Add UI elements to frame
         cv2.rectangle(frame, (0, 0), (640, 30), (50, 50, 50), -1)
-        cv2.putText(frame, "Real-Time Interview Monitoring", (10, 20),
-                   cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
-        cv2.putText(frame, timestamp, (450, 20),
-                   cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+        cv2.putText(frame, "Real-Time Interview Monitoring", (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
+        cv2.putText(frame, timestamp, (450, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
 
-        # Processing
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         faces = face_cascade.detectMultiScale(gray, 1.1, 5)
         face_count = len(faces)
-
-        # Update system status
         system_status = f"Active | Faces: {face_count}"
-
-        # Hand off to Roboflow thread
         frame_for_detection = frame.copy()
 
         suspicious_object = False
@@ -113,11 +97,9 @@ def generate_frames():
             else:
                 attention_timer += 1
 
-        # Update timers
         absence_timer = absence_timer + 1 if face_count == 0 else 0
         intruder_timer = intruder_timer + 1 if face_count > 1 else max(0, intruder_timer - 1)
 
-        # Roboflow detection
         with lock:
             for obj in detection_result.get("predictions", []):
                 c = obj["confidence"]
@@ -129,13 +111,9 @@ def generate_frames():
                     x1, y1 = x - w//2, y - h//2
                     x2, y2 = x + w//2, y + h//2
                     cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
-                    cv2.putText(frame,
-                              f"{obj['class']} ({int(c*100)}%)",
-                              (x1, y1 - 10),
-                              cv2.FONT_HERSHEY_SIMPLEX,
-                              0.6, (0, 0, 255), 2)
+                    cv2.putText(frame, f"{obj['class']} ({int(c*100)}%)", (x1, y1 - 10),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
 
-        # Determine alert
         candidate = ""
         if intruder_timer >= INTRUDER_THRESHOLD:
             candidate = "INTRUDER DETECTED"
@@ -146,35 +124,29 @@ def generate_frames():
         elif attention_timer >= ATTENTION_THRESHOLD:
             candidate = "ATTENTION LOST (LOOKING AWAY)"
 
-        # Update alert message
         if candidate != _last_alert_message:
             alert_message = candidate
             _last_alert_message = candidate
 
-        # Add status bar at bottom
         cv2.rectangle(frame, (0, 450), (640, 480), (50, 50, 50), -1)
-        cv2.putText(frame, system_status, (10, 470),
-                   cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
-        cv2.putText(frame, f"Alert: {alert_message}" if alert_message else "Status: Normal", 
-                    (200, 470), cv2.FONT_HERSHEY_SIMPLEX, 0.5, 
+        cv2.putText(frame, system_status, (10, 470), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+        cv2.putText(frame, f"Alert: {alert_message}" if alert_message else "Status: Normal",
+                    (200, 470), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
                     (0, 0, 255) if alert_message else (0, 255, 0), 1)
 
-        # Encode frame
         _, buf = cv2.imencode('.jpg', frame)
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + buf.tobytes() + b'\r\n')
 
     cap.release()
 
-# ─── FLASK ROUTES ─────────────────────────────────────────────────────────────
 @app.route('/')
 def index():
     return render_template('index.html')
 
 @app.route('/video_feed')
 def video_feed():
-    return Response(generate_frames(),
-                   mimetype='multipart/x-mixed-replace; boundary=frame')
+    return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 @app.route('/alert_status')
 def alert_status():
