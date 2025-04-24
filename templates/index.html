@@ -1,37 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Real-Time Interview Fraud Detection</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-<script>
-async function fetchAlert() {
-try {
-const res = await fetch('/alert_status');
-const data = await res.json();
-document.getElementById('alert-box').innerText = data.message || '';
-} catch (e) {
-console.error('Fetch alert failed:', e);
-document.getElementById('alert-box').innerText = 'Error fetching alerts';
-}
-}
-// poll every second
-setInterval(fetchAlert, 1000);
-// initial fetch
-window.onload = fetchAlert;
-</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Interview Fraud Detection</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script>
+        async function fetchAlert() {
+            try {
+                const res = await fetch('/alert_status');
+                const data = await res.json();
+                const alertBox = document.getElementById('alert-box');
+                
+                // Update alert box with appropriate styling
+                if (data.message.includes("No Person Detected")) {
+                    alertBox.className = "alert absence";
+                } else if (data.message.includes("Intruder Detected")) {
+                    alertBox.className = "alert intruder";
+                } else if (data.message) {
+                    alertBox.className = "alert warning";
+                } else {
+                    alertBox.className = "alert";
+                }
+                
+                alertBox.innerText = data.message || '';
+            } catch (e) {
+                console.error('Fetch alert failed:', e);
+                document.getElementById('alert-box').innerText = 'Error fetching alerts';
+            }
+        }
+        // poll every second
+        setInterval(fetchAlert, 1000);
+        // initial fetch
+        window.onload = fetchAlert;
+    </script>
 </head>
 <body>
-<h1>Real-Time Interview Fraud Detection</h1>
+    <div class="header">
+        <h1>Real-Time Interview Fraud Detection</h1>
+    </div>
 
-<!-- this uses your .alert class in styles.css -->
-<div id="alert-box" class="alert">Loading…</div>
+    <div id="alert-box" class="alert">Loading…</div>
 
-<div class="container">
-<img id="webcam" src="{{ url_for('video_feed') }}" alt="Live feed">
-</div>
+    <div class="container">
+        <img id="webcam" src="{{ url_for('video_feed') }}" alt="Live feed">
+    </div>
 </body>
 </html>
-
-
