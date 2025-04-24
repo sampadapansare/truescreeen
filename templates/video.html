@@ -1,0 +1,31 @@
+<!-- templates/video.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Real-Time Interview Fraud Detection</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Real-Time Interview Fraud Detection</h1>
+    <div class="status">Status: <span id="status">Normal</span></div>
+    <div class="camera-container">
+        <video id="camera" autoplay playsinline></video>
+    </div>
+    <script>
+        const video = document.getElementById('camera');
+        const status = document.getElementById('status');
+
+        // Get camera stream
+        navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+            .then(stream => {
+                video.srcObject = stream;
+                status.innerText = "Camera Active";
+            })
+            .catch(err => {
+                console.error("Camera error:", err);
+                status.innerText = "Camera not available";
+            });
+    </script>
+</body>
+</html>
