@@ -1,41 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Interview Fraud Detection</title>
-    <link rel="stylesheet" href="static/styles.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Real-Time Interview Fraud Detection</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+<script>
+async function fetchAlert() {
+try {
+const res = await fetch('/alert_status');
+const data = await res.json();
+document.getElementById('alert-box').innerText = data.message || '';
+} catch (e) {
+console.error('Fetch alert failed:', e);
+document.getElementById('alert-box').innerText = 'Error fetching alerts';
+}
+}
+// poll every second
+setInterval(fetchAlert, 1000);
+// initial fetch
+window.onload = fetchAlert;
+</script>
 </head>
 <body>
-    <div class="container">
-        <h1>Live Interview Fraud Detection</h1>
-        
-        <!-- Video Feed Section -->
-        <div class="video-container">
-            <h2>Camera Feed</h2>
-            <!-- Display the live stream from /video_feed -->
-            <img id="live-feed" src="{{ url_for('video_feed') }}" alt="Live Camera Feed" />
-        </div>
+<h1>Real-Time Interview Fraud Detection</h1>
 
-        <!-- Alert Section -->
-        <div class="alert-container">
-            <h2>Current Alert</h2>
-            <p id="alert-message">No Alerts</p>
-        </div>
-    </div>
+<!-- this uses your .alert class in styles.css -->
+<div id="alert-box" class="alert">Loading…</div>
 
-    <!-- Optional: Add JavaScript to refresh alerts periodically -->
-    <script>
-        function fetchAlert() {
-            fetch('/alert_status')
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('alert-message').innerText = data.message;
-                });
-        }
-
-        // Refresh the alert message every 5 seconds
-        setInterval(fetchAlert, 5000);
-    </script>
+<div class="container">
+<img id="webcam" src="{{ url_for('video_feed') }}" alt="Live feed">
+</div>
 </body>
 </html>
+
+
