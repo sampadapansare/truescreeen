@@ -49,6 +49,7 @@ def roboflow_loop():
                 print("Roboflow error:", e)
         time.sleep(4)
 
+# Start Roboflow detection in a separate thread
 threading.Thread(target=roboflow_loop, daemon=True).start()
 
 # VIDEO STREAMING AND DETECTION
